@@ -1,7 +1,7 @@
 loadrt threads name1=main-thread period1=200000 fp1=1
 loadrt toggle count=2
 loadrt timedelay
-loadusr -W deckard.py example.ini
+loadusr -W deckard.py simple.ini
 
 addf toggle.0 main-thread
 addf toggle.1 main-thread

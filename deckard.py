@@ -168,7 +168,7 @@ if __name__ == "__main__":
     config.read(args.configfile)
 
     # general configuration option section
-    section = 'general'
+    section = 'General'
     if section in config.sections():
         configopts = config[section]
     else:
@@ -192,8 +192,10 @@ if __name__ == "__main__":
             deck.deck_type(), deck.get_serial_number(), deck.get_firmware_version()
         ))
 
-        deck.set_brightness(100)
-       
+        bright = configopts.getint('Brightness', 30)
+        vprint("Set brightness to {}".format(bright))
+        deck.set_brightness(bright)
+
         for key in range(deck.key_count()):
             keys.append(Key(deckref=deck, halref=HAL, confref=config, id=key))
             
