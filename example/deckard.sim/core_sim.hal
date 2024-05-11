@@ -1,0 +1,93 @@
+# core HAL config file for simulation
+
+# first load all the RT modules that will be needed
+# kinematics
+loadrt [KINS]KINEMATICS
+# motion controller, get name and thread periods from INI file
+loadrt [EMCMOT]EMCMOT base_period_nsec=[EMCMOT]BASE_PERIOD servo_period_nsec=[EMCMOT]SERVO_PERIOD num_joints=[KINS]JOINTS
+# load 6 differentiators (for velocity and accel signals
+loadrt ddt names=ddt_x,ddt_xv,ddt_y,ddt_yv,ddt_z,ddt_zv
+# load additional blocks
+loadrt hypot names=vel_xy,vel_xyz
+loadrt toggle names=toggle.estop,toggle.power
+loadrt toggle2nist names=toggle2.estop,toggle2.power
+loadrt not names=not.idle
+loadusr -W deckard.py deckard.ini
+
+# add motion controller functions to servo thread
+addf motion-command-handler servo-thread
+addf motion-controller servo-thread
+# link the differentiator functions into the code
+addf ddt_x servo-thread
+addf ddt_xv servo-thread
+addf ddt_y servo-thread
+addf ddt_yv servo-thread
+addf ddt_z servo-thread
+addf ddt_zv servo-thread
+addf vel_xy servo-thread
+addf vel_xyz servo-thread
+
+addf toggle.estop servo-thread
+addf toggle2.estop servo-thread
+addf toggle.power servo-thread
+addf toggle2.power servo-thread
+addf not.idle servo-thread
+
+# create HAL signals for position commands from motion module
+# loop position commands back to motion module feedback
+net Xpos joint.0.motor-pos-cmd => joint.0.motor-pos-fb ddt_x.in
+net Ypos joint.1.motor-pos-cmd => joint.1.motor-pos-fb ddt_y.in
+net Zpos joint.2.motor-pos-cmd => joint.2.motor-pos-fb ddt_z.in
+
+# send the position commands thru differentiators to
+# generate velocity and accel signals
+net Xvel ddt_x.out => ddt_xv.in vel_xy.in0
+net Xacc <= ddt_xv.out
+net Yvel ddt_y.out => ddt_yv.in vel_xy.in1
+net Yacc <= ddt_yv.out
+net Zvel ddt_z.out => ddt_zv.in vel_xyz.in0
+net Zacc <= ddt_zv.out
+
+# Cartesian 2- and 3-axis velocities
+net XYvel vel_xy.out => vel_xyz.in1
+net XYZvel <= vel_xyz.out
+
+# estop loopback
+#net estop-loop iocontrol.0.user-enable-out iocontrol.0.emc-enable-in
+
+# create signals for tool loading loopback
+net tool-prep-loop iocontrol.0.tool-prepare iocontrol.0.tool-prepared
+net tool-change-loop iocontrol.0.tool-change iocontrol.0.tool-changed
+
+#  ---estop signals---
+net btn-estop toggle.estop.in <= deckard.0.00.out
+net tog2-estop toggle2.estop.in <= toggle.estop.out
+net tog2-estop-state iocontrol.0.emc-enable-in deckard.0.00.in deckard.0.01.enable toggle2.estop.is-on <= iocontrol.0.user-enable-out
+net tog2-estop-act halui.estop.activate <= toggle2.estop.off
+net tog2-estop-reset halui.estop.reset <= toggle2.estop.on
+
+# machine power
+net btn-on toggle.power.in <= deckard.0.01.out
+net tog2-power toggle2.power.in <= toggle.power.out
+net tog2-power-state deckard.0.01.in toggle2.power.is-on deckard.0.02.enable deckard.0.24.enable <= halui.machine.is-on
+net tog2-power-on halui.machine.on <= toggle2.power.on
+net tog2-power-off halui.machine.off <= toggle2.power.off
+
+# home all
+
+net btn-home-all halui.home-all <= deckard.0.02.out
+net homed-state motion.is-all-homed => deckard.0.02.in
+
+
+# cycle start/pause/stop
+
+net btn-start halui.program.run <= deckard.0.24.out
+net running halui.program.is-running => deckard.0.24.in deckard.0.26.in
+
+net btn-pause halui.program.pause <= deckard.0.25.out
+net paused halui.program.is-paused => deckard.0.25.in
+
+net btn-stop halui.program.stop <= deckard.0.26.out
+
+net idle not.idle.in <= halui.program.is-idle
+net not-idle not.idle.out => deckard.0.25.enable deckard.0.26.enable

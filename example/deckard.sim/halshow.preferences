@@ -1,0 +1,37 @@
+# Halshow settings
+# This file is generated automatically.
+wm geometry . 700x475+1103+48
+placeFrames 0.3793604651162791
+set ::ratio 0.3793604651162791
+set ::old_w_leftf 160
+set ::watchlist {
+    pin+toggle.estop.out
+    pin+toggle.estop.in
+    pin+toggle2.estop.in
+    pin+toggle2.estop.is-on
+    pin+deckard.0.00.in
+    pin+deckard.0.00.out
+    pin+axisui.error
+    pin+axisui.notifications-clear-error
+    pin+axisui.jog.x
+    pin+axisui.jog.increment
+    pin+halui.axis.x.increment
+    pin+halui.mode.is-auto
+    pin+halui.mode.is-joint
+    pin+halui.mode.is-mdi
+    pin+halui.mode.is-teleop
+    pin+halui.program.run
+    pin+halui.program.stop
+    pin+halui.program.is-running
+    pin+halui.program.is-paused
+    pin+halui.program.is-idle
+    pin+halui.program.pause
+    pin+halui.program.resume
+}
+set ::workmode watchhal
+set ::watchInterval 100
+set ::col1_width 100
+set ::ffmts 
+set ::ifmts 
+set ::alwaysOnTop 0
+set ::autoSaveWatchlist 1
