@@ -1,11 +1,6 @@
 # Intro
 
-```
-   __| | ___  ___| | ____ _ _ __ __| |
-  / _` |/ _ \/ __| |/ / _` | '__/ _` |
- | (_| |  __/ (__|   < (_| | | | (_| |
-  \__,_|\___|\___|_|\_\__,_|_|  \__,_|
-```
+![deckard](assets/deckard.png)
 
 Deckard provides StreamDeck support for LinuxCNC, allowing deck buttons to reflect and control HAL pins.  This allows creating responsive, tactile user interfaces for LinuxCNC machines.
 
