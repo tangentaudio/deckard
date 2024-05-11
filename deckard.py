@@ -31,6 +31,12 @@ from StreamDeck.Transport.Transport import TransportError
 ASSETS_PATH = os.path.join(os.path.dirname(__file__), "assets")
 HAL = hal.component("deckard")
 
+verbose = False
+
+def vprint(*args, **kwargs):
+    if verbose:
+        print(*args, **kwargs)
+
 class KeyTypes(Enum):
     UNUSED = 0
     MOMENTARY = 1
@@ -45,6 +51,7 @@ class Key:
         self.configopts = {}
         self.id = id
 
+        
         conf_section = "key.{:02}".format(self.id)
         if conf_section in self.config.sections():
             self.configopts = self.config[conf_section]
@@ -61,7 +68,9 @@ class Key:
             self.type = KeyTypes.TOGGLE2
           case _:
             self.type = KeyTypes.UNUSED
-        
+
+        self.pin_alias = self.configopts.get('PinAlias', "{:02}".format(id))
+            
         self.inactive_label = self.configopts.get('InactiveLabel', '{}.OFF'.format(self.id))
         self.active_label = self.configopts.get('ActiveLabel', '{}.ON'.format(self.id))
 
@@ -73,15 +82,17 @@ class Key:
         
         self.state = False
 
-        self.hal.newpin(self.pin_name(self.deck, self.id, 'out'), hal.HAL_BIT, hal.HAL_OUT)
-        self.hal.newpin(self.pin_name(self.deck, self.id, 'in'), hal.HAL_BIT, hal.HAL_IN)
+        if self.type != KeyTypes.UNUSED:
+            self.hal.newpin(self.pin_name('out'), hal.HAL_BIT, hal.HAL_OUT)
+            self.hal.newpin(self.pin_name('in'), hal.HAL_BIT, hal.HAL_IN)
 
-        self.hasEnable = self.configopts.getboolean('EnablePin', False)
-        if self.hasEnable:
-            self.hal.newpin(self.pin_name(self.deck, self.id, 'enable'), hal.HAL_BIT, hal.HAL_IN)
+            self.hasEnable = self.configopts.getboolean('EnablePin', False)
+            if self.hasEnable:
+                self.hal.newpin(self.pin_name('enable'), hal.HAL_BIT, hal.HAL_IN)
             
-        self.enabled = True
-
+            self.enabled = True
+        else:
+            self.enabled = False
 
         self.update_key_image()
         
@@ -89,24 +100,25 @@ class Key:
         return self.state
 
     def state_poll(self):
-        in_state = self.hal[self.pin_name(self.deck, self.id, 'in')]
-        if self.hasEnable:
-            enable_state = self.hal[self.pin_name(self.deck, self.id, 'enable')]
-        else:
-            enable_state = True
+        if self.type != KeyTypes.UNUSED:
+            in_state = self.hal[self.pin_name('in')]
+            if self.hasEnable:
+                enable_state = self.hal[self.pin_name('enable')]
+            else:
+                enable_state = True
 
-        if self.enabled != enable_state or self.state != in_state:
-            self.state = in_state
-            self.enabled = enable_state
-            self.update_key_image()
+            if self.enabled != enable_state or self.state != in_state:
+                self.state = in_state
+                self.enabled = enable_state
+                self.update_key_image()
 
-    def pin_name(self, deck, key, name):
+    def pin_name(self, name):
         #    return deck.get_serial_number() + "." + name + "." + str(key);
-        return '{:01}.{:02}.{}'.format(0, key, name)
+        return '{:1}.{}.{}'.format(0, self.pin_alias, name)
     
     def key_change(self, key_state):
-        if self.enabled:
-            self.hal[self.pin_name(deck, self.id, 'out')] = key_state
+        if self.type != KeyTypes.UNUSED and self.enabled:
+            self.hal[self.pin_name('out')] = key_state
         
     def render_key_image(self):
         with self.deck:
@@ -139,24 +151,35 @@ class Key:
 keys = []
 
 def key_change_callback(deck, key, state):
-    print("Deck {} Key {} = {}".format(deck.id(), key, state), flush=True)
+    vprint("Deck {} Key {} = {}".format(deck.id(), key, state), flush=True)
 
     with deck:
         keys[key].key_change(state)
 
 if __name__ == "__main__":
+    # command line args.  for now, just the config file as the first positional argument
     ap = argparse.ArgumentParser(prog='deckard.py', description='LinuxCNC StreamDeck support')
     ap.add_argument('configfile')
 
     args = ap.parse_args()
-    print("config file={}".format(args.configfile))
 
+    # config file parsing
     config = configparser.ConfigParser()
     config.read(args.configfile)
-    
+
+    # general configuration option section
+    section = 'general'
+    if section in config.sections():
+        configopts = config[section]
+    else:
+        config[section] = {}
+        configopts = config[section]
+
+    verbose = configopts.getboolean('Verbose', False)
+        
     decks = DeviceManager().enumerate()
 
-    print("Deckard found {} deck(s).\n".format(len(decks)))
+    vprint("Deckard found {} deck(s).\n".format(len(decks)))
 
     for index, deck in enumerate(decks):
         if not deck.is_visual():
@@ -165,7 +188,7 @@ if __name__ == "__main__":
         deck.open()
         deck.reset()
 
-        print("Opened '{}' device (serial number: '{}', fw: '{}')".format(
+        vprint("Opened '{}' device (serial number: '{}', fw: '{}')".format(
             deck.deck_type(), deck.get_serial_number(), deck.get_firmware_version()
         ))
 

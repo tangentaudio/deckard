@@ -1,0 +1,25 @@
+loadrt threads name1=main-thread period1=200000 fp1=1
+loadrt toggle count=2
+loadrt timedelay
+loadusr -W deckard.py example.ini
+
+addf toggle.0 main-thread
+addf toggle.1 main-thread
+addf timedelay.0 main-thread
+
+net t0-in toggle.0.in <= deckard.0.ButtonOne.out 
+net t0-out toggle.0.out => deckard.0.ButtonOne.in
+
+net t1-in toggle.1.in <= deckard.0.ButtonTwo.out 
+net t1-out toggle.1.out => deckard.0.ButtonTwo.in
+
+net td0-in timedelay.0.in <= deckard.0.02.out
+net td0-out timedelay.0.out => deckard.0.02.in
+
+setp timedelay.0.on-delay 0.5
+setp timedelay.0.off-delay 2
+
+
+start
+
+show pin
