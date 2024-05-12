@@ -36,14 +36,14 @@ To avoid polluting the system python installation, you need to set up a python v
 
 ### Run a basic example in `halrun`
 
-A small demo using a minimal hal file and a small Deckard config file is available in the `example` directory.
+A simple demo using a minimal hal file and a small Deckard config file is available in the `examples` directory.
 
 To run it:
 
-- `cd ~/deckard/example`
-- `./runexample.sh`
+- Switch to the examples directory: `cd ~/deckard/examples`
+- Run the script: `./runsimple.sh`
 
-If it's all working, you should see a few buttons light up on your StreamDeck, and similar output on the console.
+If it's all working, you should see a few buttons light up on your StreamDeck, and output on the console similar to this:
 
 ```
 steve@bcm-linuxcnc:~/deckard/example$ ./runexample.sh 
@@ -73,20 +73,27 @@ Owner   Type  Dir         Value  Name
      8  bit   I/O         FALSE  toggle.1.out <=> t1-out
      8  s32   OUT            36  toggle.1.time
 
-halcmd: 
 ```
 
-This demonstrates two toggle buttons implemented with the HAL `toggle` component, and a time-delay button implemented with the `timedelay` component.  You can type `exit` at the halcmd prompt to quit.
+This demonstrates two toggle buttons implemented with the HAL `toggle` component, and a time-delay button implemented with the `timedelay` component.  You can type `exit` or hit Ctrl-D at the halcmd prompt to quit.
 
 ### Run a full LinuxCNC example
 
-Bundled is a `sim.axis` configuration with a few basic functions connected to Deckard. This demo is built for a 32-button StreamDeck; to use a smaller one you will need to modify the example.
+Bundled is a `sim.axis` configuration with a few basic functions connected to Deckard. NOTE; This demo is built for a 32-button StreamDeck; to use a smaller deck you will need to modify the example.
 
-Plug in a StreamDeck into your LinuxCNC PC and run the sim
+Plug in a StreamDeck into your LinuxCNC PC and run the sim:
 
-`PATH=$PATH:~/deckard linuxcnc ~/deckard/example/deckard.sim/axis.ini`
+- Switch to the examples directory: `cd ~/deckard/examples`
+- Run the script: `./runaxis.sh`
 
-## Deckard Configuration File
+You should see several buttons load on the StreamDeck, and a classic Axis GUI will launch on your desktop.  The demo shows real interaction with LinuxCNC HAL components, such as:
 
-The configuration file is a standard .ini file format file containing several sections, keys, and values.
+- E-Stop set/reset
+- Machine power on/off
+- Home All
+- Cycle Start / Hold / Stop
+- Axis Error Notifications / Clearing
+
+## Deckard Configuration
+
 
