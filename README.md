@@ -16,7 +16,7 @@ Start by cloning this repository.  It is assumed you clone it into your home dir
 
 ### Configure Prerequisites
 
-- Ensure system is up to date, upgrade all out of date packages: `sudo apt update && sudo apt dist-upgrade -y`
+- Ensure system is up to date, upgrade all out of date packages: `sudo apt update`
 - Install pip: `sudo apt install -y python3-pip python3-setuptools`
 - Install libusb stuff: `sudo apt install -y libudev-dev libusb-1.0-0-dev libhidapi-libusb0`
 - Install Python Pillow prereqs: `sudo apt install -y libjpeg-dev zlib1g-dev libopenjp2-7`
