@@ -27,9 +27,11 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter
 from StreamDeck.DeviceManager import DeviceManager
 from StreamDeck.ImageHelpers import PILHelper
 from StreamDeck.Transport.Transport import TransportError
+from pynput.keyboard import Key as PynKey, Controller
 
 ASSETS_PATH = os.path.join(os.path.dirname(__file__), "assets")
 HAL = hal.component("deckard")
+keyboard = Controller()
 
 verbose = False
 
@@ -42,6 +44,7 @@ class KeyTypes(Enum):
     MOMENTARY = 1
     TOGGLE = 2
     TOGGLE2 = 3
+    KEYBOARD = 4
 
 class Key:
     def __init__(self, deckref, halref, confref, id):
@@ -51,7 +54,6 @@ class Key:
         self.configopts = {}
         self.id = id
 
-        
         conf_section = "key.{:02}".format(self.id)
         if conf_section in self.config.sections():
             self.configopts = self.config[conf_section]
@@ -66,6 +68,8 @@ class Key:
             self.type = KeyTypes.TOGGLE
           case "toggle2":
             self.type = KeyTypes.TOGGLE2
+          case "keyboard":
+            self.type = KeyTypes.KEYBOARD
           case _:
             self.type = KeyTypes.UNUSED
 
@@ -79,10 +83,12 @@ class Key:
         
         self.inactive_background = self.configopts.get('InactiveBackground', 'black')
         self.active_background = self.configopts.get('ActiveBackground', 'white')
+
+        self.keyboard_key = self.configopts.get('KeyboardKey', None)
         
         self.state = False
 
-        if self.type != KeyTypes.UNUSED:
+        if self.type == KeyTypes.MOMENTARY:
             self.hal.newpin(self.pin_name('out'), hal.HAL_BIT, hal.HAL_OUT)
             self.hal.newpin(self.pin_name('in'), hal.HAL_BIT, hal.HAL_IN)
 
@@ -90,6 +96,8 @@ class Key:
             if self.hasEnable:
                 self.hal.newpin(self.pin_name('enable'), hal.HAL_BIT, hal.HAL_IN)
             
+            self.enabled = True
+        elif self.type == KeyTypes.KEYBOARD:
             self.enabled = True
         else:
             self.enabled = False
@@ -100,7 +108,7 @@ class Key:
         return self.state
 
     def state_poll(self):
-        if self.type != KeyTypes.UNUSED:
+        if self.type == KeyTypes.MOMENTARY:
             in_state = self.hal[self.pin_name('in')]
             if self.hasEnable:
                 enable_state = self.hal[self.pin_name('enable')]
@@ -117,8 +125,33 @@ class Key:
         return '{:1}.{}.{}'.format(0, self.pin_alias, name)
     
     def key_change(self, key_state):
-        if self.type != KeyTypes.UNUSED and self.enabled:
-            self.hal[self.pin_name('out')] = key_state
+        if not self.enabled:
+            return
+
+        match self.type:
+            case KeyTypes.MOMENTARY:
+                self.hal[self.pin_name('out')] = key_state
+            case KeyTypes.KEYBOARD:
+                if self.keyboard_key:
+                    key = self.keyboard_key
+                    if key.startswith('Key.'):
+                        try:
+                            [junk,kenum] = key.split('Key.')
+                            key = PynKey._member_map_[kenum]
+                        except:
+                            key = '?'
+                        
+                    if key_state:
+                        keyboard.press(key)
+                        self.state = True
+                    else:
+                        keyboard.release(key)
+                        self.state = False
+
+                    self.update_key_image()
+                    
+            case _:
+                pass
         
     def render_key_image(self):
         with self.deck:

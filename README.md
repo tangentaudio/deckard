@@ -33,6 +33,7 @@ To avoid polluting the system python installation, you need to set up a python v
 - Set up a python virtual environment: `python3 -m venv .venv --system-site-packages`
 - Install the pillow library: `.venv/bin/pip3 install pillow`
 - Install the StreamDeck python library: `.venv/bin/pip3 install streamdeck`
+- Install pynput: `.venv/bin/pip3 install pynput`
 
 ### Run a basic example in `halrun`
 

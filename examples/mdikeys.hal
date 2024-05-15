@@ -1,0 +1,6 @@
+loadrt threads name1=main-thread period1=200000 fp1=1
+loadusr -W deckard.py mdikeys.ini
+
+start
+
+show pin
