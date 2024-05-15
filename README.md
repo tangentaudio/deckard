@@ -6,17 +6,22 @@ Deckard provides StreamDeck support for LinuxCNC, allowing deck buttons to refle
 
 [Origin of the project name](https://en.wikipedia.org/wiki/Rick_Deckard)
 
-## How to install and use
+## Versions
 
-Clone this repository.  It is assumed you clone it into your home directory, e.g. `~/deckard`
+This was built for LinuxCNC 2.9.2 from the standard Debian 12 ISO image.  It probably will work on other versions, but you're in somewhat uncharted waters.
+
+## Installation
+
+Start by cloning this repository.  It is assumed you clone it into your home directory, e.g. `~/deckard`
 
 ### Configure Prerequisites
 
-- Ensure system is up to date, upgrade all out of date packages: `sudo apt update && sudo apt dist-upgrade -y`
-- Install the pip Python package manager: `sudo apt install -y python3-pip python3-setuptools`
-- Install system packages needed for the default LibUSB HIDAPI backend: `sudo apt install -y libudev-dev libusb-1.0-0-dev libhidapi-libusb0`
-- Install system packages needed for the Python Pillow package installation: `sudo apt install -y libjpeg-dev zlib1g-dev libopenjp2-7`
-- Add udev rule to allow all users non-root access to StreamDeck devices:
+- Ensure system is up to date, upgrade all out of date packages: `sudo apt update`
+- Install pip: `sudo apt install -y python3-pip python3-setuptools`
+- Install venv: `sudo apt install python3-venv`
+- Install libusb stuff: `sudo apt install -y libudev-dev libusb-1.0-0-dev libhidapi-libusb0`
+- Install Python Pillow prereqs: `sudo apt install -y libjpeg-dev zlib1g-dev libopenjp2-7`
+- Add udev rule to allow all users non-root access to StreamDeck devices as follows:
 ```
 sudo tee /etc/udev/rules.d/10-streamdeck.rules << EOF
 SUBSYSTEMS=="usb", ATTRS{idVendor}=="0fd9", GROUP="users", TAG+="uaccess"
@@ -95,6 +100,7 @@ You should see several buttons load on the StreamDeck, and a classic Axis GUI wi
 - Cycle Start / Hold / Stop
 - Axis Error Notifications / Clearing
 
-## Deckard Configuration
+## Deckard Configuration and Use
 
+More info on configuration and use is contained in the GitHub wiki for this project.
 
